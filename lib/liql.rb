@@ -51,7 +51,7 @@ module Liql
         TerminalValue.new(value: ast.value)
       when Liquider::Ast::ForNode
         value = eval_ast(ast.expression, lexical_scope)
-        if !value.schema.is_a?(Liql::CollectionSchema)
+        unless value.schema.is_a?(Liql::CollectionSchema)
           value.schema = Liql::CollectionSchema.new(item_schema: nil, schema: value.schema)
         end
         child_scope = lexical_scope.add_child_scope
