@@ -1,9 +1,9 @@
 require "spec_helper"
 require "pry"
 
-describe Liql do
+describe Liql::GraphQL::Compiler do
   let(:ast) { Liql.parse(File.read(File.expand_path("../support/graphql.html.liquid", __FILE__))) }
-  let(:compiled) { Liql::GraphqlCompiler.new(ast).compile }
+  let(:compiled) { Liql::GraphQL::Compiler.new(ast).compile }
 
   it "generates a graphql query from an ast" do
     expected = <<~GRAPHQL.strip
