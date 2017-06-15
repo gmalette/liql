@@ -43,15 +43,20 @@ module Liql
         eval_ast(ast.expression, lexical_scope)
         TerminalValue.new(value: :bool)
       when Liquider::Ast::NumberNode
-        TerminalValue.new(value: :bool)
+        TerminalValue.new(value: ast.value)
       when Liquider::Ast::StringNode
         TerminalValue.new(value: ast.value)
+      when Liquider::Ast::BooleanNode
+        TerminalValue.new(value: ast.value)
       when Liquider::Ast::ForNode
-        assign = lexical_scope.create_binding(ast.binding.name)
         value = eval_ast(ast.expression, lexical_scope)
+        if !value.schema.is_a?(Liql::CollectionSchema)
+          value.schema = Liql::CollectionSchema.new(item_schema: nil, schema: value.schema)
+        end
+        child_scope = lexical_scope.add_child_scope
+        assign = child_scope.create_binding(ast.binding.name)
         assign.refs << value
-        eval_ast(ast.body, lexical_scope.add_child_scope)
-        binding.pry
+        eval_ast(ast.body, child_scope)
         nil
       when Liquider::Ast::AssignNode
         assign = lexical_scope.create_binding(ast.binding.name)
@@ -64,61 +69,68 @@ module Liql
       when Liquider::Ast::NullNode
         nil
       else
-        binding.pry
-        raise ast.class.name
+        raise "unsupported: #{ast.class.name}"
         nil
       end
     end
+  end
 
-    LexicalScope = Struct.new(:parent, :children, :bindings) do
-      def initialize(parent: nil)
-        self.parent = parent
-        self.children = []
-        self.bindings = {}
-      end
-
-      def add_child_scope
-        new_scope = LexicalScope.new(parent: self)
-        children << new_scope
-        new_scope
-      end
-
-      def find_binding(name:)
-        bindings[name]&.last ||
-          parent&.find_binding(name: name) ||
-          create_binding(name)
-      end
-
-      def create_binding(name)
-        var = Variable.new(name: name)
-        bindings[name] ||= []
-        bindings[name].push(var)
-        var
-      end
-
-      def root
-        parent&.root || self
-      end
+  LexicalScope = Struct.new(:parent, :children, :bindings) do
+    def initialize(parent: nil)
+      self.parent = parent
+      self.children = []
+      self.bindings = {}
     end
 
-    TerminalValue = Struct.new(:value) do
-      def initialize(value:)
-        self.value = value
-      end
+    def add_child_scope
+      new_scope = LexicalScope.new(parent: self)
+      children << new_scope
+      new_scope
     end
 
-    Variable = Struct.new(:name, :schema, :refs, :properties, :id) do
-      def initialize(name:, schema: nil, refs: [])
-        self.id = SecureRandom.hex
-        self.name = name
-        self.schema = schema
-        self.properties = {}
-        self.refs = refs
-      end
+    def find_binding(name:)
+      bindings[name]&.last ||
+        parent&.find_binding(name: name) ||
+        create_binding(name)
+    end
 
-      def add_property(name:, property:)
-        self.properties[name] = property
-      end
+    def create_binding(name)
+      var = Variable.new(name: name)
+      bindings[name] ||= []
+      bindings[name].push(var)
+      var
+    end
+
+    def root
+      parent&.root || self
+    end
+  end
+
+  TerminalValue = Struct.new(:value) do
+    def initialize(value:)
+      self.value = value
+    end
+  end
+
+  Variable = Struct.new(:name, :schema, :refs, :properties, :id) do
+    def initialize(name:, schema: nil, refs: [])
+      self.id = SecureRandom.hex
+      self.name = name
+      self.schema = schema
+      self.properties = {}
+      self.refs = refs
+    end
+
+    def add_property(name:, property:)
+      self.properties[name] = property
+    end
+  end
+
+  CollectionSchema = Struct.new(:schema, :item_schema, :id) do
+    def initialize(item_schema: nil, schema: nil)
+      self.id = SecureRandom.hex
+      self.schema = schema
+      self.item_schema = item_schema
     end
   end
 end
