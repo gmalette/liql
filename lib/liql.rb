@@ -29,7 +29,7 @@ module Liql
       when Liquider::Ast::CallNode
         target = eval_ast(ast.target, lexical_scope)
         property = ast.property.name
-        target.properties[name] ||
+        target.properties[property] ||
           target.add_property(name: property, property: Variable.new(name: property))
       when Liquider::Ast::SymbolNode
         lexical_scope.find_binding(name: ast.name)

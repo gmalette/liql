@@ -4,3 +4,4 @@ source 'https://rubygems.org'
 gemspec
 
 gem "liquider", github: "sgnr/liquider", ref: "track-parser"
+gem "pry-nav"

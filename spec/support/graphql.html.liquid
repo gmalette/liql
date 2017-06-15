@@ -8,5 +8,10 @@
 
   <body>
     {{ shop.description }}
+
+    {% if shop.address %}
+      <div>{{ shop.address.city }}</div>
+      <div>{{ shop.address.zip }}</div>
+    {% endif %}
   </body>
 </html>

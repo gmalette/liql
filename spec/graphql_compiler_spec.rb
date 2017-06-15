@@ -6,7 +6,18 @@ describe Liql do
   let(:compiled) { Liql::GraphqlCompiler.new(ast).compile }
 
   it "generates a graphql query from an ast" do
-    expected = "query LiquidTemplate {\n  shop {\n    name\n    description\n  }\n}"
+    expected = <<~GRAPHQL.strip
+      query LiquidTemplate {
+        shop {
+          name
+          description
+          address {
+            city
+            zip
+          }
+        }
+      }
+    GRAPHQL
     expect(compiled.to_query_string).to eq(expected)
   end
 end
