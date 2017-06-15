@@ -55,17 +55,15 @@ module Liql
           value.schema = Liql::CollectionSchema.new(item_schema: nil, schema: value.schema)
         end
         child_scope = lexical_scope.add_child_scope
-        assign = child_scope.create_binding(ast.binding.name)
-        assign.refs << value
+        assign = child_scope.create_binding(ast.binding.name, ref: value)
         eval_ast(ast.body, child_scope)
         nil
       when Liquider::Ast::AssignNode
-        assign = lexical_scope.create_binding(ast.binding.name)
         value = eval_ast(ast.value, lexical_scope)
-        assign.refs << value
+        lexical_scope.create_binding(ast.binding.name, ref: value)
         value
-      when :another
       when Liquider::Ast::FilterNode
+
         nil
       when Liquider::Ast::NullNode
         nil
@@ -95,8 +93,8 @@ module Liql
         create_binding(name)
     end
 
-    def create_binding(name)
-      var = Variable.new(name: name)
+    def create_binding(name, ref: nil)
+      var = Variable.new(name: name, ref: ref)
       bindings[name] ||= []
       bindings[name].push(var)
       var
@@ -113,20 +111,23 @@ module Liql
     end
   end
 
-  Variable = Struct.new(:name, :schema, :refs, :properties, :id) do
-    def initialize(name:, schema: nil, refs: [])
+  Variable = Struct.new(:name, :schema, :ref, :properties, :id) do
+    def initialize(name:, schema: nil, ref: nil)
       self.id = SecureRandom.hex
       self.name = name
       self.schema = schema
       self.properties = {}
-      self.refs = refs
+      self.ref = ref
     end
 
     def ref?
-      refs.any?
+      !ref.nil?
     end
 
     def add_property(name:, property:)
+      if ref
+        ref.add_property(name: name, property: property)
+      end
       self.properties[name] = property
     end
   end

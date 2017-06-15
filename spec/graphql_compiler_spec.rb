@@ -13,7 +13,9 @@ describe Liql do
           description
           address {
             city
-            zip
+            zip {
+              upcase
+            }
           }
         }
       }
