@@ -1,5 +1,6 @@
 require "liql/version"
 require "liquider"
+require "securerandom"
 
 module Liql
   class << self

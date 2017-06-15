@@ -1,5 +1,7 @@
-PATH
-  remote: ../liquider
+GIT
+  remote: git://github.com/sgnr/liquider.git
+  revision: f935ac3e5e1011c6846b4f0d531273c77f58b654
+  ref: track-parser
   specs:
     liquider (0.0.1)
 
@@ -46,4 +48,4 @@ DEPENDENCIES
   rspec (~> 3.0)
 
 BUNDLED WITH
-   1.13.3
+   1.15.1

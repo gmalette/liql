@@ -2,7 +2,7 @@ require "spec_helper"
 require "pry"
 
 describe Liql do
-  let(:layout) { File.read(File.expand_path("../support/layout.html.erb", __FILE__)) }
+  let(:layout) { File.read(File.expand_path("../support/layout.html.liquid", __FILE__)) }
 
   it "has a version number" do
     expect(Liql::VERSION).not_to be nil
