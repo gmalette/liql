@@ -10,6 +10,7 @@ PATH
   specs:
     liql (0.1.0)
       graphql
+      liquid
 
 GEM
   remote: https://rubygems.org/
@@ -17,6 +18,7 @@ GEM
     coderay (1.1.1)
     diff-lcs (1.2.5)
     graphql (1.6.3)
+    liquid (2.6.1)
     method_source (0.8.2)
     pry (0.10.4)
       coderay (~> 1.1.0)

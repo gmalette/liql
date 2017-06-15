@@ -1,18 +1,19 @@
-require 'graphql/compiler'
-
 module Liql
   module GraphQL
-    attr_accessor :network_layer
+    class << self
+      attr_accessor :network_layer
+      attr_accessor :schema
+    end
 
     def self.render_liquid(template)
       ast = Liql.parse(template)
       query = Compiler.new(ast).compile
 
-      response = network_layer.query(query)
+      response = self.network_layer.query(query)
+      data = response["data"]
 
-      # TODO turn response into drop for template
-      # Liquid::Template.parse ?
-      # template.render ?
+      template = Liquid::Template.parse(template)
+      template.render(data)
     end
   end
 end

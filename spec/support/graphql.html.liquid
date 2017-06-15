@@ -1,22 +1,19 @@
 <!doctype html>
 <html>
-<head>
-  <title>
-    {{ shop.name }}
-  </title>
-</head>
-
+  <head>
+    <title>
+      {{ shop.name }}
+    </title>
+  </head>
   <body>
     {{ shop.description }}
-
-    {% if shop.address %}
-      <div>{{ shop.address.city }}</div>
-      <div>{{ shop.address.zip }}</div>
-    {% endif %}
-
-    {% assign lol = shop.address %}
+{% if shop.address %}
+    <div>{{ shop.address.city }}</div>
+    <div>{{ shop.address.zip }}</div>
+{% endif %}
+{% assign lol = shop.address %}
     <p>{{ lol.zip }}</p>
-    {% assign foo = lol.zip %}
+{% assign foo = lol.zip %}
     <p>{{ foo.upcase }}</p>
   </body>
 </html>
