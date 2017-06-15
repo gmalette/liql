@@ -1,4 +1,5 @@
 require "liql/version"
+require "liql/graphql_compiler"
 require "liquider"
 require "securerandom"
 
