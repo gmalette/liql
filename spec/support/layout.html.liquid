@@ -1,0 +1,42 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  {% if settings.favicon_enable %}
+    <link rel="shortcut icon" href="{{ 'favicon.png' | asset_url }}" type="image/png" />
+  {% endif %}
+
+  <title>
+    {{ page_title }}
+    {% if current_tags %}
+      {% assign meta_tags = current_tags | join: ', ' %}
+      {{ 'general.meta.tags' | t: tags: meta_tags }}
+    {% endif %}
+    {% if current_page != 1 %}
+      {{ 'general.meta.page' | t: page: current_page }}
+      {% endif %}
+    {% unless page_title contains shop.name %}
+      {{ shop.name }}
+    {% endunless %}
+  </title>
+
+  {% if page_description %}
+    <meta name="description" content="{{ page_description | escape }}">
+  {% endif %}
+
+  <link rel="canonical" href="{{ canonical_url }}">
+
+  {% if template contains 'index' %}
+    {{ 'string' | asset_url | stylesheet_tag }}
+  {% endif %}
+
+  {{ content_for_header }}
+  {% assign page_title = "a" %}
+</head>
+
+  <body>
+  {% for link in linklists.links %}
+  {% assign toto = page_title %}
+    <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+  {% endfor %}
+  </body>
+</html>
