@@ -64,8 +64,13 @@ module Liql
         lexical_scope.create_binding(ast.binding.name, ref: value)
         value
       when Liquider::Ast::FilterNode
-
+        eval_ast(ast.arg_list, lexical_scope)
         nil
+      when Liquider::Ast::ArgListNode
+        ast.positionals.each { | pos| eval_ast(pos, lexical_scope) }
+        ast.optionals.each { |opt| eval_ast(opt, lexical_scope) }
+      when Liquider::Ast::OptionPairNode
+        eval_ast(ast.value, lexical_scope)
       when Liquider::Ast::NullNode
         nil
       else

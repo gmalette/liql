@@ -68,7 +68,7 @@ describe Liql do
     expect(foo_binding.ref).to(eq(Liql::TerminalValue.new(value: :bool)))
   end
 
-  pending "binds variables when they're used in filters" do
+  it "binds variables when they're used in filters" do
     ast = Liql.parse("{{ foo | bar: baz: toto | tutu: tata }}")
     foo_binding = ast.bindings["foo"].first
     toto_binding = ast.bindings["toto"].first
