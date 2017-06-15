@@ -122,6 +122,10 @@ module Liql
       self.refs = refs
     end
 
+    def ref?
+      refs.any?
+    end
+
     def add_property(name:, property:)
       self.properties[name] = property
     end

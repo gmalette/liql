@@ -18,6 +18,7 @@ describe Liql do
         }
       }
     GRAPHQL
+
     expect(compiled.to_query_string).to eq(expected)
   end
 end

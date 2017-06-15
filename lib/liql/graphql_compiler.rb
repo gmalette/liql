@@ -21,23 +21,29 @@ module Liql
     private
 
     def get_selections_for_bindings(binding_sets)
-      (binding_sets.values.map do |binding_set|
-        binding_set.map do |bind|
-          GraphQL::Language::Nodes::Field.new(
-            name: bind.name,
-            selections: get_selections_for_properties(bind.properties)
-          )
-        end
-      end).flatten
+      selections = binding_sets.values.map do |binding_set|
+        binding_set.map { |bind| build_field_from_binding(bind) }
+      end
+
+      selections.flatten.compact
     end
 
-    def get_selections_for_properties(properties)
+    def build_field_from_binding(bind)
+      return if bind.ref?
+
+      GraphQL::Language::Nodes::Field.new(
+        name: bind.name,
+        selections: get_selections_from_properties(bind.properties)
+      )
+    end
+
+    def get_selections_from_properties(properties)
       return [] unless properties
 
       properties.values.map do |property|
         GraphQL::Language::Nodes::Field.new(
           name: property.name,
-          selections: get_selections_for_properties(property.properties)
+          selections: get_selections_from_properties(property.properties)
         )
       end
     end
