@@ -3,6 +3,7 @@ require "liql"
 require "rspec"
 require "pry"
 require "pry-nav"
+require "support/schema"
 
 class MockNetworkLayer
   def initialize(mock_response)
