@@ -8,7 +8,7 @@ describe Liql do
     expect(Liql::VERSION).not_to be nil
   end
 
-  it "binds assigns on terminal values" do
+  it "binds assigns on static values" do
     mapping = Liql.parse(<<-LIQUID)
       {% assign foo = 'foo' %}
       {% assign bar = 1 %}
@@ -16,19 +16,19 @@ describe Liql do
     LIQUID
 
     foo_binding = mapping.bindings["foo"].first
-    terminal_foo = Liql::TerminalValue.new(value: "foo")
+    static_foo = Liql::StaticValue.new(value: "foo")
     expect(foo_binding).to(be_a(Liql::Variable))
-    expect(foo_binding.ref).to(eq(terminal_foo))
+    expect(foo_binding.ref).to(eq(static_foo))
 
     bar_binding = mapping.bindings["bar"].first
-    terminal_bar = Liql::TerminalValue.new(value: 1)
+    static_bar = Liql::StaticValue.new(value: 1)
     expect(bar_binding).to(be_a(Liql::Variable))
-    expect(bar_binding.ref).to(eq(terminal_bar))
+    expect(bar_binding.ref).to(eq(static_bar))
 
     baz_binding = mapping.bindings["baz"].first
-    terminal_baz = Liql::TerminalValue.new(value: false)
+    static_baz = Liql::StaticValue.new(value: false)
     expect(baz_binding).to(be_a(Liql::Variable))
-    expect(baz_binding.ref).to(eq(terminal_baz))
+    expect(baz_binding.ref).to(eq(static_baz))
   end
 
   it "binds variables when they're used in mustache" do
@@ -65,7 +65,7 @@ describe Liql do
     expect(bar_binding).to(be_a(Liql::Variable))
     expect(baz_binding).to(be_a(Liql::Variable))
     expect(foo_binding).to(be_a(Liql::Variable))
-    expect(foo_binding.ref).to(eq(Liql::TerminalValue.new(value: :bool)))
+    expect(foo_binding.ref).to(eq(Liql::StaticValue.new(value: :bool)))
   end
 
   it "binds variables when they're used in filters" do
@@ -108,9 +108,37 @@ describe Liql do
     LIQUID
     product_binding = mapping.bindings["product"].first
     expect(product_binding).to(be_a(Liql::Variable))
-    expect(product_binding.properties["variants"]).to(be_a(Liql::Variable))
-    expect(product_binding.properties["handle"]).to(be_a(Liql::Variable))
+    expect(product_binding.properties["variants"]).to(be_a(Liql::Property))
+    expect(product_binding.properties["handle"]).to(be_a(Liql::Property))
   end
 
-  it "can augment properties on index-access if the property is a terminal value"
+  it "as_call_tree returns a flat map of bindings" do
+    scope = Liql::LexicalScope.new(
+      bindings: {
+        "foo" => [
+          Liql::Variable.new(name: "foo", properties: { "bar" => Liql::Property.new(name: "bar")}),
+        ]
+      }
+    )
+    child = scope.add_child_scope
+    child.bindings = {
+      "foo" => [
+        Liql::Variable.new(name: "foo", properties: { "baz" => Liql::Property.new(name: "baz")}),
+      ]
+    }
+
+    bindings = scope.as_call_tree
+    expect(bindings).to(be_a(Hash))
+    expect(bindings["foo"].count).to(eq(2))
+    expect(bindings["foo"][0]).to(
+      be_a_variable(
+        Liql::Variable.new(name: "foo", properties: { "bar" => Liql::Property.new(name: "bar")}),
+      ))
+    expect(bindings["foo"][1]).to(
+      be_a_variable(
+        Liql::Variable.new(name: "foo", properties: { "baz" => Liql::Property.new(name: "baz")}),
+      ))
+  end
+
+  it "can augment properties on index-access if the property is a static value"
 end

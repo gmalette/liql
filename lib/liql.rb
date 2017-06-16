@@ -3,6 +3,7 @@ require "liql/graphql"
 require "liql/graphql/compiler"
 require "liql/graphql/network_layer"
 require "liquid"
+require "liql/type"
 require "liquider"
 require "securerandom"
 
@@ -33,7 +34,7 @@ module Liql
         target = eval_ast(ast.target, lexical_scope)
         property = ast.property.name
         target.properties[property] ||
-          target.add_property(name: property, property: Variable.new(name: property))
+          target.add_property(name: property)
       when Liquider::Ast::SymbolNode
         lexical_scope.find_binding(name: ast.name)
       when Liquider::Ast::MustacheNode
@@ -42,16 +43,16 @@ module Liql
       when Liquider::Ast::BinOpNode
         eval_ast(ast.left, lexical_scope)
         eval_ast(ast.right, lexical_scope)
-        TerminalValue.new(value: :bool)
+        StaticValue.new(value: :bool)
       when Liquider::Ast::NegationNode
         eval_ast(ast.expression, lexical_scope)
-        TerminalValue.new(value: :bool)
+        StaticValue.new(value: :bool)
       when Liquider::Ast::NumberNode
-        TerminalValue.new(value: ast.value)
+        StaticValue.new(value: ast.value)
       when Liquider::Ast::StringNode
-        TerminalValue.new(value: ast.value)
+        StaticValue.new(value: ast.value)
       when Liquider::Ast::BooleanNode
-        TerminalValue.new(value: ast.value)
+        StaticValue.new(value: ast.value)
       when Liquider::Ast::ForNode
         value = eval_ast(ast.expression, lexical_scope)
         unless value.schema.is_a?(Liql::CollectionSchema)
@@ -83,10 +84,10 @@ module Liql
   end
 
   LexicalScope = Struct.new(:parent, :children, :bindings) do
-    def initialize(parent: nil)
+    def initialize(parent: nil, bindings: {})
       self.parent = parent
       self.children = []
-      self.bindings = {}
+      self.bindings = bindings
     end
 
     def add_child_scope
@@ -111,20 +112,39 @@ module Liql
     def root
       parent&.root || self
     end
+
+    def as_call_tree
+      children.reduce(bindings) do |bindings, child|
+        bindings.merge(child.bindings) { |_, r, l| r + l }
+      end
+    end
   end
 
-  TerminalValue = Struct.new(:value) do
+  StaticValue = Struct.new(:value) do
     def initialize(value:)
       self.value = value
     end
   end
 
+  Property = Struct.new(:name, :schema, :properties) do
+    def initialize(name:, schema: nil, ref: nil, properties: {})
+      self.name = name
+      self.schema = schema
+      self.properties = properties
+    end
+
+    def add_property(name:, property: nil)
+      property ||= Property.new(name: name)
+      self.properties[name] = property
+    end
+  end
+
   Variable = Struct.new(:name, :schema, :ref, :properties, :id) do
-    def initialize(name:, schema: nil, ref: nil)
+    def initialize(name:, schema: nil, ref: nil, properties: {})
       self.id = SecureRandom.hex
       self.name = name
       self.schema = schema
-      self.properties = {}
+      self.properties = properties
       self.ref = ref
     end
 
@@ -132,7 +152,8 @@ module Liql
       !ref.nil?
     end
 
-    def add_property(name:, property:)
+    def add_property(name:, property: nil)
+      property ||= Property.new(name: name)
       if ref
         ref.add_property(name: name, property: property)
       end
